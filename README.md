@@ -2,7 +2,7 @@
 
 Adapted from my own implementation of Harvard's CS50AI's Week 6 Questions Problem Set
 
-Produces an answer from the web given a question
+Produces an answer from the web given a question using a Question Answering(QA) model under the Natural Language Processing(NLP) field
 
 ### Process
 1. Entity Linking and Word Sense Disambiguation AI is implemented with [Babely API](http://babelfy.org)
