@@ -119,7 +119,7 @@ def compute_idfs(documents):
     of words, return a dictionary that maps words to their IDF values.
 
     Any word that appears in at least one of the documents should be in the
-    resulting dictionary. 6143
+    resulting dictionary.
     """
     idfs = dict()
     words = []
