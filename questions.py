@@ -3,15 +3,57 @@ import sys
 import os
 import string
 import math
+import requests
+import re
 
 FILE_MATCHES = 1
 SENTENCE_MATCHES = 1
-
+WIKI_PAGES = 5
+API_KEY = "152866d0-b5ab-459d-95b8-aa9da5228cdd"
 
 def main():
     # Check command-line arguments
     if len(sys.argv) != 2:
         sys.exit("Usage: python questions.py corpus")
+    
+    # Delete any existing file in corpus
+    for file in os.listdir(os.path.join(os.getcwd(), 'corpus')):
+        os.remove(os.path.join(os.getcwd(), 'corpus', file))
+    
+    # Prompt user for query
+    text = input("Query: ")
+
+    # Get API response of key words to query
+    response = requests.get(f"https://babelfy.io/v1/disambiguate?text={text}&lang=EN&key={API_KEY}").json()
+    
+    page_count = 0
+    # Parse API response to retrieve and store their wikipedia pages in corpus
+    for item in response[:WIKI_PAGES+1]:
+        if grp := re.search(r'^http://dbpedia.org/resource/(.+)$', item['DBpediaURL']):
+            key_word = text[item['charFragment']['start']:item['charFragment']['end']+1]
+            # print(key_word)
+            # print(item['DBpediaURL'])
+            # print(grp.group(1))
+            # print()
+            site = requests.get(
+                'https://en.wikipedia.org/w/api.php',
+                params={
+                    'action': 'query',
+                    'format': 'json',
+                    'titles': grp.group(1),
+                    'prop': 'extracts',
+                    'explaintext': True,
+                }).json()
+            page = next(iter(site['query']['pages'].values()))
+            with open(f'{os.path.join(sys.argv[1], key_word)}.txt', 'w') as file:
+                file.write(page['extract'])
+                page_count+=1
+
+    # Indicate Wikipedia pages found
+    if page_count==0:
+        print("No Wikipedia pages found, please rephrase question to make it more specific")
+    else:
+        print(f'{page_count} Wikipedia pages found and parsed')
 
     # Calculate IDF values across files
     files = load_files(sys.argv[1])
@@ -21,8 +63,8 @@ def main():
     }
     file_idfs = compute_idfs(file_words)
 
-    # Prompt user for query
-    query = set(tokenize(input("Query: ")))
+    # Tokenize the input text
+    query = set(tokenize(text))
 
     # Determine top file matches according to TF-IDF
     filenames = top_files(query, file_words, file_idfs, n=FILE_MATCHES)
@@ -42,8 +84,7 @@ def main():
     # Determine top sentence matches
     matches = top_sentences(query, sentences, idfs, n=SENTENCE_MATCHES)
     for match in matches:
-        print(match)
-
+        print(f'Answer: {match}')
 
 def load_files(directory):
     """
@@ -71,7 +112,6 @@ def tokenize(document):
         if word not in list(string.punctuation)+nltk.corpus.stopwords.words("english"):
             words.append(word)
     return words
-
 
 def compute_idfs(documents):
     """
@@ -118,9 +158,6 @@ def top_files(query, files, idfs, n):
     
     return return_list[:n]
 
-
-
-
 def top_sentences(query, sentences, idfs, n):
     """
     Given a `query` (a set of words), `sentences` (a dictionary mapping
@@ -144,8 +181,6 @@ def top_sentences(query, sentences, idfs, n):
     return_list.reverse()
 
     return return_list[:n]
-    
-
 
 if __name__ == "__main__":
     main()
