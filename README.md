@@ -5,7 +5,7 @@ Adapted from my own implementation of Harvard's CS50AI's Week 6 Questions Proble
 Produces an answer from the web given a question using a Question Answering(QA) model under the Natural Language Processing(NLP) field
 
 ### Process
-1. Entity Linking and Word Sense Disambiguation AI is implemented with [Babely API](http://babelfy.org)
+1. Entity Linking and Word Sense Disambiguation AI is implemented with [Babelfy API](http://babelfy.org)
 2. Keywords from the API response are used to load corresponding Wikipedia pages into a corpus
 3. Question is then tokenized into words after filtering out stopwords and punctuation
 4. Inverse Document Frequency(IDF) is then calculated for each word that shows up in the documents
